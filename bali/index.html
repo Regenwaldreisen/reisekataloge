@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="de-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bali · Reisekatalog 2027 | Regenwaldreisen</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#101c2c;color:#fff;font:16px system-ui,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column}header{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:17px 22px}header strong{font-size:clamp(15px,2.2vw,21px)}a{color:#d6e9ff;text-decoration:none}a:hover{text-decoration:underline}main{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;padding:10px 12px 20px}#book{width:min(96vw,1100px);height:min(75vh,750px)}.page{background:#fff;overflow:hidden}.page img{display:block;width:100%;height:100%;object-fit:fill}.page.--left{border-right:1px solid #d0d0d0}.controls{display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 12px 23px;flex-wrap:wrap}button{border:1px solid #64758b;background:#243950;color:#fff;border-radius:8px;padding:10px 18px;font-size:15px;cursor:pointer}button:hover{background:#34516d}button:disabled{opacity:.4;cursor:default}#counter{min-width:130px;text-align:center;color:#d3dce9;font-size:14px}.hint{font-size:12px;color:#a8b9cd;text-align:center;padding-bottom:12px}@media(max-width:650px){header{padding:12px}header a{font-size:13px}#book{width:96vw;height:70vh}.controls{gap:10px}}
+</style></head><body>
+<header><strong>Bali · Reisekatalog 2027</strong><a href="https://www.regenwaldreisen.ch/" target="_blank" rel="noopener">Regenwaldreisen.ch</a></header>
+<main><div id="book" aria-label="Bali-Reisekatalog mit Umblättereffekt"></div></main>
+<div class="controls"><button id="prev" type="button">← Zurück</button><span id="counter">Seite 1 von 51</span><button id="next" type="button">Weiter →</button></div><div class="hint">Mit den Pfeilen blättern oder die Seitenecken ziehen</div>
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<script>
+(function(){const count=51,root=document.getElementById('book'),counter=document.getElementById('counter'),prev=document.getElementById('prev'),next=document.getElementById('next');
+for(let i=1;i<=count;i++){const page=document.createElement('div');page.className='page';const img=document.createElement('img');img.src='pages/seite-'+String(i).padStart(2,'0')+'.jpg';img.alt='Bali Reisekatalog – Seite '+i;img.loading=i<=3?'eager':'lazy';img.draggable=false;page.appendChild(img);root.appendChild(page)}
+if(!window.St||!window.St.PageFlip){document.querySelector('.hint').textContent='Der Umblättereffekt konnte nicht geladen werden. Bitte Internetverbindung prüfen.';return}
+const flip=new St.PageFlip(root,{width:512,height:512,size:'stretch',minWidth:260,maxWidth:640,minHeight:260,maxHeight:640,showCover:true,usePortrait:true,mobileScrollSupport:false,drawShadow:true,flippingTime:850,maxShadowOpacity:.35,autoSize:true,clickEventForward:true,swipeDistance:30,showPageCorners:true});
+flip.loadFromHTML(root.querySelectorAll('.page'));
+function update(){const current=flip.getCurrentPageIndex()+1;const portrait=flip.getOrientation()==='portrait';counter.textContent='Seite '+current+' von '+count;prev.disabled=current<=1;next.disabled=current>=count;}
+flip.on('flip',update);flip.on('changeOrientation',update);prev.addEventListener('click',()=>flip.flipPrev());next.addEventListener('click',()=>flip.flipNext());document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')flip.flipNext();if(e.key==='ArrowLeft')flip.flipPrev()});update();
+})();
+</script></body></html>
