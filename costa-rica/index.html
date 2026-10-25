@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Costa Rica – Reisekatalog 01/2027 | Regenwaldreisen</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10232a;color:#f3f6f4;font-family:Arial,Helvetica,sans-serif}header{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid #ffffff24}h1{font-size:clamp(16px,2vw,23px);margin:0;font-weight:600}a{color:#b5ebdd}main{min-height:calc(100dvh - 130px);display:flex;align-items:center;justify-content:center;padding:18px 10px;overflow:hidden}#book{margin:auto}.page{background:#fff;overflow:hidden}.page img{display:block;width:100%;height:100%;object-fit:fill;user-select:none;-webkit-user-drag:none}.page.--left{box-shadow:inset -7px 0 14px #0002}.page.--right{box-shadow:inset 7px 0 14px #0002}footer{padding:10px 16px 18px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}button{border:1px solid #ffffff55;background:#21454b;color:white;border-radius:8px;padding:10px 18px;font-size:15px;cursor:pointer}button:disabled{opacity:.4;cursor:default}#status{min-width:130px;text-align:center;font-size:14px}#error{display:none;text-align:center;padding:30px;color:#ffe1bd}@media(max-width:600px){header{padding:12px}header a{font-size:12px}main{padding:10px 2px;min-height:calc(100dvh - 118px)}footer{gap:8px}button{padding:9px 12px}}
+</style>
+</head>
+<body>
+<header><h1>Costa Rica · Reisekatalog 01/2027</h1><a href="https://www.regenwaldreisen.ch/" target="_blank" rel="noopener">Regenwaldreisen.ch</a></header>
+<main><div id="book" aria-label="Blätterkatalog Costa Rica"></div><div id="error">Der Blätterkatalog konnte nicht geladen werden. Bitte die Internetverbindung prüfen.</div></main>
+<footer><button id="prev" type="button">◀ Zurück</button><span id="status" aria-live="polite">Seite 1 von 162</span><button id="next" type="button">Weiter ▶</button></footer>
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<script>
+(function(){
+const total=162, book=document.getElementById('book'), status=document.getElementById('status'), prev=document.getElementById('prev'), next=document.getElementById('next');
+if(!window.St || !St.PageFlip){document.getElementById('error').style.display='block';book.style.display='none';return;}
+for(let i=1;i<=total;i++){
+ const page=document.createElement('div');page.className='page';page.setAttribute('data-density',i===1?'hard':'soft');
+ const img=document.createElement('img');img.alt='Costa Rica Reisekatalog – Seite '+i;img.loading=i<=4?'eager':'lazy';img.decoding='async';img.src='pages/seite-'+String(i).padStart(3,'0')+'.jpg';page.appendChild(img);book.appendChild(page);
+}
+const flip=new St.PageFlip(book,{width:500,height:707,size:'stretch',minWidth:230,maxWidth:590,minHeight:325,maxHeight:834,showCover:true,usePortrait:true,mobileScrollSupport:false,drawShadow:true,maxShadowOpacity:0.45,flippingTime:850,autoSize:true,clickEventForward:true,swipeDistance:25,showPageCorners:true});
+flip.loadFromHTML(document.querySelectorAll('.page'));
+function update(){const n=flip.getCurrentPageIndex()+1;status.textContent='Seite '+n+' von '+total;prev.disabled=n===1;next.disabled=n>=total;}
+flip.on('flip',update);flip.on('changeOrientation',update);prev.onclick=()=>flip.flipPrev();next.onclick=()=>flip.flipNext();document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')flip.flipNext();if(e.key==='ArrowLeft')flip.flipPrev();});update();
+})();
+</script>
+</body></html>
