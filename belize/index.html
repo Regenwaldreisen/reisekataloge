@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="de-CH"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Belize · Reisekatalog 2027 | Regenwaldreisen</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#101c2c;color:#fff;font:16px system-ui,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column}header{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:15px 24px}header a{color:#dce9f9;text-decoration:none;font-size:14px}main{flex:1;display:flex;justify-content:center;align-items:center;min-height:0;padding:8px 14px}#book{margin:auto}.page{background:#fff;overflow:hidden}.page img{display:block;width:100%;height:100%;object-fit:fill}.controls{display:flex;align-items:center;justify-content:center;gap:18px;padding:12px 15px 24px;flex-wrap:wrap}.controls button{background:#233a53;border:1px solid #6b8298;color:white;border-radius:8px;padding:11px 19px;cursor:pointer}.controls button:disabled{opacity:.35;cursor:default}.hint{text-align:center;font-size:12px;color:#aab8ca;padding-bottom:10px}@media(max-width:650px){header{padding:10px 12px;font-size:13px}.controls{gap:10px;padding-bottom:12px}.controls button{padding:9px 12px}}
+</style></head><body>
+<header><strong>Belize · Reisekatalog 2027</strong><a href="https://www.regenwaldreisen.ch/" target="_blank" rel="noopener">Regenwaldreisen.ch</a></header>
+<main><div id="book" aria-label="Belize-Reisekatalog mit Umblättereffekt"></div></main>
+<div class="controls"><button id="prev" type="button">← Zurück</button><span id="counter">Seite 1 von 20</span><button id="next" type="button">Weiter →</button></div><div class="hint">Zum Umblättern die Pfeile oder die Seitenecken verwenden</div>
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<script>
+(function(){const count=20,root=document.getElementById('book'),counter=document.getElementById('counter'),prev=document.getElementById('prev'),next=document.getElementById('next');
+for(let i=1;i<=count;i++){const page=document.createElement('div');page.className='page';const img=document.createElement('img');img.src='pages/seite-'+String(i).padStart(2,'0')+'.jpg';img.alt='Belize Reisekatalog – Seite '+i;img.loading=i<=3?'eager':'lazy';page.appendChild(img);root.appendChild(page)}
+if(!window.St||!window.St.PageFlip){document.querySelector('.hint').textContent='Der Umblättereffekt konnte nicht geladen werden. Bitte Internetverbindung prüfen.';return}
+const flip=new St.PageFlip(root,{width:512,height:724,size:'stretch',minWidth:240,maxWidth:512,minHeight:340,maxHeight:724,showCover:true,usePortrait:true,mobileScrollSupport:false,drawShadow:true,flippingTime:750});
+flip.loadFromHTML(root.querySelectorAll('.page'));
+function update(){const current=flip.getCurrentPageIndex()+1;counter.textContent='Seite '+current+' von '+count;prev.disabled=current===1;next.disabled=current===count}
+flip.on('flip',update);flip.on('changeOrientation',update);prev.addEventListener('click',()=>flip.flipPrev());next.addEventListener('click',()=>flip.flipNext());document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')flip.flipNext();if(e.key==='ArrowLeft')flip.flipPrev()});update();
+})();
+</script></body></html>
