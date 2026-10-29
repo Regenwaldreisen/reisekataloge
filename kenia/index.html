@@ -22,7 +22,7 @@ main{display:flex;flex-direction:column;align-items:center;justify-content:cente
 const total=26, urls=Array.from({length:total},(_,i)=>`pages/seite-${String(i+1).padStart(3,'0')}.jpg`);
 const status=document.getElementById('status'),counter=document.getElementById('counter'),prev=document.getElementById('prev'),next=document.getElementById('next');
 if(!window.St||!St.PageFlip){status.textContent='Die Blätterfunktion konnte nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.';return;}
-const flip=new St.PageFlip(document.getElementById('book'),{width:480,height:679,size:'stretch',minWidth:230,maxWidth:480,minHeight:325,maxHeight:679,showCover:false,usePortrait:true,mobileScrollSupport:false,drawShadow:true,maxShadowOpacity:.45,flippingTime:850,autoSize:true,clickEventForward:true,swipeDistance:25});
+const flip=new St.PageFlip(document.getElementById('book'),{width:480,height:679,size:'stretch',minWidth:230,maxWidth:480,minHeight:325,maxHeight:679,showCover:true,usePortrait:true,mobileScrollSupport:false,drawShadow:true,maxShadowOpacity:.45,flippingTime:850,autoSize:true,clickEventForward:true,swipeDistance:25});
 flip.loadFromImages(urls);
 function update(){const idx=flip.getCurrentPageIndex();document.getElementById('book').classList.toggle('cover-start',idx===0 && flip.getOrientation()==='landscape');counter.textContent=`Seite ${idx+1} von ${total}`;prev.disabled=idx===0;next.disabled=idx>=total-1;}
 flip.on('flip',update);flip.on('init',update);flip.on('changeOrientation',update);
