@@ -8,7 +8,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 main{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 115px);padding:16px 10px 8px;overflow:hidden}
 #book{margin:auto;max-width:100%;filter:drop-shadow(0 9px 20px #0008)}
 /* Center the single front cover in landscape mode. */
-#book.cover-start{transform:translateX(25%)}
+#book.cover-start{transform:none}
 @media(max-width:640px){#book.cover-start{transform:none}}#book .page{background:white;overflow:hidden}#book .page img{display:block;width:100%;height:100%;object-fit:fill}
 .controls{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:14px;padding:12px 12px 22px}button{background:#e7eee9;border:0;color:#16252a;border-radius:6px;padding:11px 20px;cursor:pointer;font-weight:700}button:hover{background:white}button:disabled{opacity:.4;cursor:default}#counter{min-width:130px;text-align:center;font-size:14px;color:#dbe7e3}
 #status{font-size:14px;text-align:center;color:#dbe7e3;padding:8px} @media(max-width:640px){header{padding:12px}header a{font-size:12px}main{min-height:calc(100dvh - 125px)}.controls{gap:8px}button{padding:10px 14px}}
@@ -22,7 +22,7 @@ main{display:flex;flex-direction:column;align-items:center;justify-content:cente
 const total=26, urls=Array.from({length:total},(_,i)=>`pages/seite-${String(i+1).padStart(3,'0')}.jpg`);
 const status=document.getElementById('status'),counter=document.getElementById('counter'),prev=document.getElementById('prev'),next=document.getElementById('next');
 if(!window.St||!St.PageFlip){status.textContent='Die Blätterfunktion konnte nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.';return;}
-const flip=new St.PageFlip(document.getElementById('book'),{width:480,height:679,size:'stretch',minWidth:230,maxWidth:480,minHeight:325,maxHeight:679,showCover:true,usePortrait:true,mobileScrollSupport:false,drawShadow:true,maxShadowOpacity:.45,flippingTime:850,autoSize:true,clickEventForward:true,swipeDistance:25});
+const flip=new St.PageFlip(document.getElementById('book'),{width:480,height:679,size:'stretch',minWidth:230,maxWidth:480,minHeight:325,maxHeight:679,showCover:false,usePortrait:true,mobileScrollSupport:false,drawShadow:true,maxShadowOpacity:.45,flippingTime:850,autoSize:true,clickEventForward:true,swipeDistance:25});
 flip.loadFromImages(urls);
 function update(){const idx=flip.getCurrentPageIndex();document.getElementById('book').classList.toggle('cover-start',idx===0 && flip.getOrientation()==='landscape');counter.textContent=`Seite ${idx+1} von ${total}`;prev.disabled=idx===0;next.disabled=idx>=total-1;}
 flip.on('flip',update);flip.on('init',update);flip.on('changeOrientation',update);
