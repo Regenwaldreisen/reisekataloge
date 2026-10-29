@@ -6,7 +6,10 @@
 :root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#15232b;color:#fff}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;background:#102029}header strong{font-size:clamp(16px,2vw,22px)}header a{color:#d2e9e1;text-decoration:none;font-size:14px}
 main{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 115px);padding:16px 10px 8px;overflow:hidden}
-#book{margin:auto;max-width:100%;filter:drop-shadow(0 9px 20px #0008)}#book .page{background:white;overflow:hidden}#book .page img{display:block;width:100%;height:100%;object-fit:fill}
+#book{margin:auto;max-width:100%;filter:drop-shadow(0 9px 20px #0008)}
+/* Center the single front cover in landscape mode. */
+#book.cover-start{transform:translateX(-25%)}
+@media(max-width:640px){#book.cover-start{transform:none}}#book .page{background:white;overflow:hidden}#book .page img{display:block;width:100%;height:100%;object-fit:fill}
 .controls{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:14px;padding:12px 12px 22px}button{background:#e7eee9;border:0;color:#16252a;border-radius:6px;padding:11px 20px;cursor:pointer;font-weight:700}button:hover{background:white}button:disabled{opacity:.4;cursor:default}#counter{min-width:130px;text-align:center;font-size:14px;color:#dbe7e3}
 #status{font-size:14px;text-align:center;color:#dbe7e3;padding:8px} @media(max-width:640px){header{padding:12px}header a{font-size:12px}main{min-height:calc(100dvh - 125px)}.controls{gap:8px}button{padding:10px 14px}}
 </style></head><body>
@@ -21,7 +24,7 @@ const status=document.getElementById('status'),counter=document.getElementById('
 if(!window.St||!St.PageFlip){status.textContent='Die Blätterfunktion konnte nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.';return;}
 const flip=new St.PageFlip(document.getElementById('book'),{width:480,height:679,size:'stretch',minWidth:230,maxWidth:480,minHeight:325,maxHeight:679,showCover:true,usePortrait:true,mobileScrollSupport:false,drawShadow:true,maxShadowOpacity:.45,flippingTime:850,autoSize:true,clickEventForward:true,swipeDistance:25});
 flip.loadFromImages(urls);
-function update(){const idx=flip.getCurrentPageIndex();counter.textContent=`Seite ${idx+1} von ${total}`;prev.disabled=idx===0;next.disabled=idx>=total-1;}
+function update(){const idx=flip.getCurrentPageIndex();document.getElementById('book').classList.toggle('cover-start',idx===0 && flip.getOrientation()==='landscape');counter.textContent=`Seite ${idx+1} von ${total}`;prev.disabled=idx===0;next.disabled=idx>=total-1;}
 flip.on('flip',update);flip.on('init',update);flip.on('changeOrientation',update);
 prev.addEventListener('click',()=>flip.flipPrev());next.addEventListener('click',()=>flip.flipNext());
 document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')flip.flipNext();if(e.key==='ArrowLeft')flip.flipPrev()});
