@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <title>Spanien – Regenwaldreisen 01/2027</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #e9e7e2;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      gap: 12px;
+    }
+
+    #book {
+      margin: 0 auto;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: 1px solid #999;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background: #f4f4f4;
+    }
+
+    #counter {
+      font-size: 14px;
+      color: #444;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div id="book"></div>
+
+    <div class="controls">
+      <button id="previous">Zurück</button>
+      <span id="counter">Seite 1 / 14</span>
+      <button id="next">Weiter</button>
+    </div>
+  </div>
+
+  <script>
+    const images = [];
+
+    for (let i = 1; i <= 14; i++) {
+      const number = String(i).padStart(2, "0");
+      images.push("pages/seite-" + number + ".jpg");
+    }
+
+    const flipBook = new St.PageFlip(
+      document.getElementById("book"),
+      {
+        width: 480,
+        height: 679,
+        size: "stretch",
+        minWidth: 230,
+        maxWidth: 480,
+        minHeight: 325,
+        maxHeight: 679,
+        showCover: true,
+        startPage: 0,
+        usePortrait: true,
+        mobileScrollSupport: false,
+        drawShadow: true,
+        maxShadowOpacity: 0.45,
+        flippingTime: 850,
+        autoSize: true,
+        swipeDistance: 25
+      }
+    );
+
+    flipBook.loadFromImages(images);
+
+    const counter = document.getElementById("counter");
+
+    function updateCounter(pageIndex) {
+      counter.textContent =
+        "Seite " + (pageIndex + 1) + " / 14";
+    }
+
+    flipBook.on("flip", function (event) {
+      updateCounter(event.data);
+    });
+
+    document.getElementById("previous")
+      .addEventListener("click", function () {
+        flipBook.flipPrev();
+      });
+
+    document.getElementById("next")
+      .addEventListener("click", function () {
+        flipBook.flipNext();
+      });
+  </script>
+</body>
+</html>
