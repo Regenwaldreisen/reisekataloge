@@ -1,6 +1,124 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mexiko – Reisekatalog 2027 | Regenwaldreisen</title>
-<style>html,body{margin:0;min-height:100%;background:#edf0ed;font-family:Arial,sans-serif;color:#16392c}header{text-align:center;padding:12px 8px}h1{font-size:clamp(19px,3vw,28px);margin:0 0 4px}#book{margin:auto}#book img{width:100%;height:100%;object-fit:contain;background:white}.controls{display:flex;justify-content:center;align-items:center;gap:14px;padding:12px;flex-wrap:wrap}button{background:#164a37;color:white;border:0;border-radius:5px;padding:10px 18px;cursor:pointer}button:focus-visible{outline:3px solid orange}small{color:#53645b}footer{text-align:center;padding:6px 0 18px}a{color:#164a37}</style></head>
+<style>html,body{margin:0;min-height:100%;background:#edf0ed;font-family:Arial,sans-serif;color:#16392c}header{text-align:center;padding:12px 8px}h1{font-size:clamp(19px,3vw,28px);margin:0 0 4px}#book{margin:auto}#book img{width:100%;height:100%;object-fit:contain;background:white}.controls{display:flex;justify-content:center;align-items:center;gap:14px;padding:12px;flex-wrap:wrap}button{background:#164a37;color:white;border:0;border-radius:5px;padding:10px 18px;cursor:pointer}button:focus-visible{outline:3px solid orange}small{color:#53645b}footer{text-align:center;padding:6px 0 18px}a{color:#164a37}</style><style>#rwZoomDialog{border:0;padding:0;width:100vw;max-width:none;height:100dvh;max-height:none;background:#182420;color:#fff}
+#rwZoomDialog::backdrop{background:#182420}
+.rwZoom-tools{height:64px;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px}
+.rwZoom-tools button{padding:10px 14px}
+#rwZoomLevel{min-width:48px;text-align:center}
+#rwZoomViewport{position:relative;height:calc(100dvh - 100px);overflow:auto;touch-action:none;cursor:grab;overscroll-behavior:contain}
+#rwZoomCanvas{display:flex;margin:auto;user-select:none}
+#rwZoomCanvas img{height:100%;min-width:0;flex:1;object-fit:fill;pointer-events:none}
+.rwZoom-hint{text-align:center;font-size:12px;height:36px;margin:0;padding:8px;color:#d8e5de}
+
+#rwZoomOpen{position:fixed;right:12px;top:calc(64px + env(safe-area-inset-top,0px));z-index:10000;background:#176a51;color:white;border:2px solid white;border-radius:24px;padding:12px 18px;min-height:44px;box-shadow:0 2px 9px #0005;font:bold 16px Arial,sans-serif;cursor:pointer}
+#rwZoomDialog .rwZoom-tools{height:auto;min-height:64px;flex-wrap:wrap}
+#rwZoomDialog{box-sizing:border-box;overflow:hidden;font:16px Arial,sans-serif}
+#rwZoomViewport{position:relative;height:auto;flex:1;min-height:0}
+#rwZoomDialog[open]{display:flex;flex-direction:column}
+#rwZoomCanvas img{max-width:none}
+#rwZoomDialog button{min-height:44px;background:#176a51;color:#fff;border:0;border-radius:6px;font:bold 14px Arial,sans-serif;cursor:pointer}
+#rwZoomDialog button:disabled{opacity:.4}
+#rwZoomDialog .rwZoom-hint{flex:none;height:auto;min-height:36px}
+</style><script>
+window.rwAttachZoom=function(flip,sources){
+if(document.getElementById("rwZoomOpen"))return;
+const holder=document.createElement("div");holder.innerHTML="<dialog id=\"rwZoomDialog\" tabindex=\"-1\" aria-label=\"Vergr\u00f6sserte Katalogseiten\">\n<div class=\"rwZoom-tools\">\n<button id=\"rwZoomOut\" aria-label=\"Verkleinern\">\u2212</button>\n<output id=\"rwZoomLevel\" aria-live=\"polite\">100%</output>\n<button id=\"rwZoomIn\" aria-label=\"Vergr\u00f6ssern\">+</button>\n<button id=\"rwZoomReset\">Einpassen</button>\n<button id=\"rwZoomClose\" aria-label=\"Zoom schliessen\">\u2715 Schliessen</button>\n</div>\n<div id=\"rwZoomViewport\"><div id=\"rwZoomCanvas\"></div></div>\n<p class=\"rwZoom-hint\">Ziehen zum Verschieben \u00b7 Zwei Finger oder + / \u2212 zum Zoomen</p>\n</dialog>\n";document.body.appendChild(holder);
+const button=document.createElement("button");button.id="rwZoomOpen";button.type="button";button.textContent="🔍 Lupe";button.setAttribute("aria-label","Aktuelle Katalogseiten vergrössern");document.body.appendChild(button);
+const rwZoomDialog=document.getElementById('rwZoomDialog');
+const rwZoomViewport=document.getElementById('rwZoomViewport');
+const rwZoomCanvas=document.getElementById('rwZoomCanvas');
+const rwZoomLevel=document.getElementById('rwZoomLevel');
+let rwZoomScale=1, baseWidth=0, baseHeight=0, pageCount=1;
+const pointers=new Map();
+function fitZoom(){
+  const first=rwZoomCanvas.querySelector('img');
+  const ratio=(first && first.naturalWidth ? first.naturalWidth/first.naturalHeight : 595/842)*pageCount;
+  baseHeight=Math.min(rwZoomViewport.clientHeight,rwZoomViewport.clientWidth/ratio);
+  baseWidth=baseHeight*ratio;
+  rwZoomScale=1;paintZoom();
+  rwZoomViewport.scrollLeft=0;rwZoomViewport.scrollTop=0;
+}
+function paintZoom(){
+  rwZoomCanvas.style.width=(baseWidth*rwZoomScale)+'px';
+  rwZoomCanvas.style.height=(baseHeight*rwZoomScale)+'px';
+  rwZoomLevel.textContent=Math.round(rwZoomScale*100)+'%';
+  document.getElementById('rwZoomOut').disabled=rwZoomScale<=1;
+  document.getElementById('rwZoomIn').disabled=rwZoomScale>=5;
+}
+function setZoom(value,x=rwZoomViewport.clientWidth/2,y=rwZoomViewport.clientHeight/2){
+  const old=rwZoomScale, oldLeft=rwZoomCanvas.offsetLeft, oldTop=rwZoomCanvas.offsetTop;
+  const cx=(rwZoomViewport.scrollLeft+x-oldLeft)/old;
+  const cy=(rwZoomViewport.scrollTop+y-oldTop)/old;
+  rwZoomScale=Math.max(1,Math.min(5,value));paintZoom();
+  rwZoomViewport.scrollLeft=rwZoomCanvas.offsetLeft+cx*rwZoomScale-x;
+  rwZoomViewport.scrollTop=rwZoomCanvas.offsetTop+cy*rwZoomScale-y;
+}
+function openZoom(){
+  if(rwZoomDialog.open)return;
+  const current=flip.getCurrentPageIndex();
+  const indices=[current];
+  const settings=flip.getSettings();
+  const isCover=settings.showCover && (current===0 || (sources.length%2===0 && current===sources.length-1));
+  if(flip.getOrientation()==='landscape' && !isCover && current+1<sources.length)indices.push(current+1);
+  pageCount=indices.length;rwZoomCanvas.replaceChildren();
+  for(const i of indices){
+    const img=document.createElement('img');img.src=sources[i];img.alt='Katalogseite '+(i+1);img.draggable=false;
+    img.addEventListener('load',()=>{if(rwZoomScale===1)fitZoom();},{once:true});rwZoomCanvas.appendChild(img);
+  }
+  rwZoomDialog.showModal();document.body.style.overflow='hidden';fitZoom();
+}
+document.getElementById('rwZoomOpen').addEventListener('click',openZoom);
+document.getElementById('rwZoomClose').addEventListener('click',()=>rwZoomDialog.close());
+rwZoomDialog.addEventListener('close',()=>{document.body.style.overflow='';pointers.clear();});
+document.getElementById('rwZoomIn').addEventListener('click',()=>setZoom(rwZoomScale*1.4));
+document.getElementById('rwZoomOut').addEventListener('click',()=>setZoom(rwZoomScale/1.4));
+document.getElementById('rwZoomReset').addEventListener('click',fitZoom);
+rwZoomViewport.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch')return;
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});rwZoomViewport.setPointerCapture(e.pointerId);
+});
+rwZoomViewport.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId))return;
+  const before=[...pointers.values()];const previous=pointers.get(e.pointerId);
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});const after=[...pointers.values()];
+  if(after.length===2){
+    const distance=p=>Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+    const d=distance(before);if(d<1)return;
+    const rect=rwZoomViewport.getBoundingClientRect();
+    setZoom(rwZoomScale*distance(after)/d,(after[0].x+after[1].x)/2-rect.left,(after[0].y+after[1].y)/2-rect.top);
+  }else if(after.length===1){
+    rwZoomViewport.scrollLeft-=e.clientX-previous.x;rwZoomViewport.scrollTop-=e.clientY-previous.y;
+  }
+});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])rwZoomViewport.addEventListener(event,e=>pointers.delete(e.pointerId));
+rwZoomViewport.addEventListener('wheel',e=>{
+  e.preventDefault();const rect=rwZoomViewport.getBoundingClientRect();
+  setZoom(rwZoomScale*Math.exp(-e.deltaY*.002),e.clientX-rect.left,e.clientY-rect.top);
+},{passive:false});
+rwZoomViewport.addEventListener('dblclick',e=>{
+  const rect=rwZoomViewport.getBoundingClientRect();setZoom(rwZoomScale>1?1:2,e.clientX-rect.left,e.clientY-rect.top);
+});
+window.addEventListener('resize',()=>{if(rwZoomDialog.open)fitZoom();});
+
+let touchState=null;
+const touchData=e=>Array.from(e.touches,t=>({x:t.clientX,y:t.clientY}));
+function gestureStart(e){e.preventDefault();touchState=touchData(e);}
+rwZoomViewport.addEventListener('touchstart',gestureStart,{passive:false});
+rwZoomViewport.addEventListener('touchmove',e=>{
+ e.preventDefault();const now=touchData(e), old=touchState;touchState=now;
+ if(!old || old.length!==now.length)return;
+ if(now.length===2){
+  const dist=p=>Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y),d=dist(old);
+  const rect=rwZoomViewport.getBoundingClientRect();
+  if(d>1)setZoom(rwZoomScale*dist(now)/d,(now[0].x+now[1].x)/2-rect.left,(now[0].y+now[1].y)/2-rect.top);
+ }else if(now.length===1){rwZoomViewport.scrollLeft-=now[0].x-old[0].x;rwZoomViewport.scrollTop-=now[0].y-old[0].y;}
+},{passive:false});
+for(const event of ['touchend','touchcancel'])rwZoomViewport.addEventListener(event,e=>{touchState=touchData(e);},{passive:true});
+document.addEventListener('keydown',e=>{if(rwZoomDialog.open && e.key!=='Escape'){e.stopImmediatePropagation();}},{capture:true});
+
+};
+</script>
+</head>
 <body><header><h1>Mexiko – Reisekatalog 2027</h1><small>Regenwaldreisen · Reisen. Erleben. Entdecken.</small></header>
 <div id="book"></div><nav class="controls"><button id="prev" aria-label="Vorherige Seite">◀ Zurück</button><span id="pageInfo">Seite 1 von 40</span><button id="next" aria-label="Nächste Seite">Weiter ▶</button></nav><footer><a href="https://www.regenwaldreisen.ch/" target="_blank" rel="noopener">www.regenwaldreisen.ch</a></footer>
 <script src="page-flip.browser.js"></script><script>
@@ -9,7 +127,8 @@ const pages=Array.from({length:total},(_,i)=>`pages/seite-${String(i+1).padStart
 const book=document.getElementById('book');
 if(typeof St==='undefined'||!St.PageFlip){book.innerHTML='<p style="text-align:center">Die Blätterfunktion benötigt die Datei <b>page-flip.browser.js</b> im selben Ordner wie index.html.</p>';}else{
  const flip=new St.PageFlip(book,{width:595,height:842,size:'stretch',minWidth:280,maxWidth:595,minHeight:396,maxHeight:842,showCover:true,mobileScrollSupport:false,usePortrait:true,autoSize:true,flippingTime:650,maxShadowOpacity:0.25});
- flip.loadFromImages(pages);
+ window.rwAttachZoom(flip,pages);
+flip.loadFromImages(pages);
  const update=()=>document.getElementById('pageInfo').textContent=`Seite ${flip.getCurrentPageIndex()+1} von ${total}`;
  flip.on('flip',update);document.getElementById('prev').onclick=()=>flip.flipPrev();document.getElementById('next').onclick=()=>flip.flipNext();
  document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')flip.flipPrev();if(e.key==='ArrowRight')flip.flipNext()});update();

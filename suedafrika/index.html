@@ -32,6 +32,124 @@ button:disabled{opacity:.35;cursor:default}
 #zoomCanvas img{height:100%;min-width:0;flex:1;object-fit:fill;pointer-events:none}
 .zoom-hint{text-align:center;font-size:12px;height:36px;margin:0;padding:8px;color:#d8e5de}
 </style>
+<style>#rwZoomDialog{border:0;padding:0;width:100vw;max-width:none;height:100dvh;max-height:none;background:#182420;color:#fff}
+#rwZoomDialog::backdrop{background:#182420}
+.rwZoom-tools{height:64px;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px}
+.rwZoom-tools button{padding:10px 14px}
+#rwZoomLevel{min-width:48px;text-align:center}
+#rwZoomViewport{position:relative;height:calc(100dvh - 100px);overflow:auto;touch-action:none;cursor:grab;overscroll-behavior:contain}
+#rwZoomCanvas{display:flex;margin:auto;user-select:none}
+#rwZoomCanvas img{height:100%;min-width:0;flex:1;object-fit:fill;pointer-events:none}
+.rwZoom-hint{text-align:center;font-size:12px;height:36px;margin:0;padding:8px;color:#d8e5de}
+
+#rwZoomOpen{position:fixed;right:12px;top:calc(64px + env(safe-area-inset-top,0px));z-index:10000;background:#176a51;color:white;border:2px solid white;border-radius:24px;padding:12px 18px;min-height:44px;box-shadow:0 2px 9px #0005;font:bold 16px Arial,sans-serif;cursor:pointer}
+#rwZoomDialog .rwZoom-tools{height:auto;min-height:64px;flex-wrap:wrap}
+#rwZoomDialog{box-sizing:border-box;overflow:hidden;font:16px Arial,sans-serif}
+#rwZoomViewport{position:relative;height:auto;flex:1;min-height:0}
+#rwZoomDialog[open]{display:flex;flex-direction:column}
+#rwZoomCanvas img{max-width:none}
+#rwZoomDialog button{min-height:44px;background:#176a51;color:#fff;border:0;border-radius:6px;font:bold 14px Arial,sans-serif;cursor:pointer}
+#rwZoomDialog button:disabled{opacity:.4}
+#rwZoomDialog .rwZoom-hint{flex:none;height:auto;min-height:36px}
+</style><script>
+window.rwAttachZoom=function(flip,sources){
+if(document.getElementById("rwZoomOpen"))return;
+const holder=document.createElement("div");holder.innerHTML="<dialog id=\"rwZoomDialog\" tabindex=\"-1\" aria-label=\"Vergr\u00f6sserte Katalogseiten\">\n<div class=\"rwZoom-tools\">\n<button id=\"rwZoomOut\" aria-label=\"Verkleinern\">\u2212</button>\n<output id=\"rwZoomLevel\" aria-live=\"polite\">100%</output>\n<button id=\"rwZoomIn\" aria-label=\"Vergr\u00f6ssern\">+</button>\n<button id=\"rwZoomReset\">Einpassen</button>\n<button id=\"rwZoomClose\" aria-label=\"Zoom schliessen\">\u2715 Schliessen</button>\n</div>\n<div id=\"rwZoomViewport\"><div id=\"rwZoomCanvas\"></div></div>\n<p class=\"rwZoom-hint\">Ziehen zum Verschieben \u00b7 Zwei Finger oder + / \u2212 zum Zoomen</p>\n</dialog>\n";document.body.appendChild(holder);
+const button=document.createElement("button");button.id="rwZoomOpen";button.type="button";button.textContent="🔍 Lupe";button.setAttribute("aria-label","Aktuelle Katalogseiten vergrössern");document.body.appendChild(button);
+const rwZoomDialog=document.getElementById('rwZoomDialog');
+const rwZoomViewport=document.getElementById('rwZoomViewport');
+const rwZoomCanvas=document.getElementById('rwZoomCanvas');
+const rwZoomLevel=document.getElementById('rwZoomLevel');
+let rwZoomScale=1, baseWidth=0, baseHeight=0, pageCount=1;
+const pointers=new Map();
+function fitZoom(){
+  const first=rwZoomCanvas.querySelector('img');
+  const ratio=(first && first.naturalWidth ? first.naturalWidth/first.naturalHeight : 595/842)*pageCount;
+  baseHeight=Math.min(rwZoomViewport.clientHeight,rwZoomViewport.clientWidth/ratio);
+  baseWidth=baseHeight*ratio;
+  rwZoomScale=1;paintZoom();
+  rwZoomViewport.scrollLeft=0;rwZoomViewport.scrollTop=0;
+}
+function paintZoom(){
+  rwZoomCanvas.style.width=(baseWidth*rwZoomScale)+'px';
+  rwZoomCanvas.style.height=(baseHeight*rwZoomScale)+'px';
+  rwZoomLevel.textContent=Math.round(rwZoomScale*100)+'%';
+  document.getElementById('rwZoomOut').disabled=rwZoomScale<=1;
+  document.getElementById('rwZoomIn').disabled=rwZoomScale>=5;
+}
+function setZoom(value,x=rwZoomViewport.clientWidth/2,y=rwZoomViewport.clientHeight/2){
+  const old=rwZoomScale, oldLeft=rwZoomCanvas.offsetLeft, oldTop=rwZoomCanvas.offsetTop;
+  const cx=(rwZoomViewport.scrollLeft+x-oldLeft)/old;
+  const cy=(rwZoomViewport.scrollTop+y-oldTop)/old;
+  rwZoomScale=Math.max(1,Math.min(5,value));paintZoom();
+  rwZoomViewport.scrollLeft=rwZoomCanvas.offsetLeft+cx*rwZoomScale-x;
+  rwZoomViewport.scrollTop=rwZoomCanvas.offsetTop+cy*rwZoomScale-y;
+}
+function openZoom(){
+  if(rwZoomDialog.open)return;
+  const current=flip.getCurrentPageIndex();
+  const indices=[current];
+  const settings=flip.getSettings();
+  const isCover=settings.showCover && (current===0 || (sources.length%2===0 && current===sources.length-1));
+  if(flip.getOrientation()==='landscape' && !isCover && current+1<sources.length)indices.push(current+1);
+  pageCount=indices.length;rwZoomCanvas.replaceChildren();
+  for(const i of indices){
+    const img=document.createElement('img');img.src=sources[i];img.alt='Katalogseite '+(i+1);img.draggable=false;
+    img.addEventListener('load',()=>{if(rwZoomScale===1)fitZoom();},{once:true});rwZoomCanvas.appendChild(img);
+  }
+  rwZoomDialog.showModal();document.body.style.overflow='hidden';fitZoom();
+}
+document.getElementById('rwZoomOpen').addEventListener('click',openZoom);
+document.getElementById('rwZoomClose').addEventListener('click',()=>rwZoomDialog.close());
+rwZoomDialog.addEventListener('close',()=>{document.body.style.overflow='';pointers.clear();});
+document.getElementById('rwZoomIn').addEventListener('click',()=>setZoom(rwZoomScale*1.4));
+document.getElementById('rwZoomOut').addEventListener('click',()=>setZoom(rwZoomScale/1.4));
+document.getElementById('rwZoomReset').addEventListener('click',fitZoom);
+rwZoomViewport.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch')return;
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});rwZoomViewport.setPointerCapture(e.pointerId);
+});
+rwZoomViewport.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId))return;
+  const before=[...pointers.values()];const previous=pointers.get(e.pointerId);
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});const after=[...pointers.values()];
+  if(after.length===2){
+    const distance=p=>Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+    const d=distance(before);if(d<1)return;
+    const rect=rwZoomViewport.getBoundingClientRect();
+    setZoom(rwZoomScale*distance(after)/d,(after[0].x+after[1].x)/2-rect.left,(after[0].y+after[1].y)/2-rect.top);
+  }else if(after.length===1){
+    rwZoomViewport.scrollLeft-=e.clientX-previous.x;rwZoomViewport.scrollTop-=e.clientY-previous.y;
+  }
+});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])rwZoomViewport.addEventListener(event,e=>pointers.delete(e.pointerId));
+rwZoomViewport.addEventListener('wheel',e=>{
+  e.preventDefault();const rect=rwZoomViewport.getBoundingClientRect();
+  setZoom(rwZoomScale*Math.exp(-e.deltaY*.002),e.clientX-rect.left,e.clientY-rect.top);
+},{passive:false});
+rwZoomViewport.addEventListener('dblclick',e=>{
+  const rect=rwZoomViewport.getBoundingClientRect();setZoom(rwZoomScale>1?1:2,e.clientX-rect.left,e.clientY-rect.top);
+});
+window.addEventListener('resize',()=>{if(rwZoomDialog.open)fitZoom();});
+
+let touchState=null;
+const touchData=e=>Array.from(e.touches,t=>({x:t.clientX,y:t.clientY}));
+function gestureStart(e){e.preventDefault();touchState=touchData(e);}
+rwZoomViewport.addEventListener('touchstart',gestureStart,{passive:false});
+rwZoomViewport.addEventListener('touchmove',e=>{
+ e.preventDefault();const now=touchData(e), old=touchState;touchState=now;
+ if(!old || old.length!==now.length)return;
+ if(now.length===2){
+  const dist=p=>Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y),d=dist(old);
+  const rect=rwZoomViewport.getBoundingClientRect();
+  if(d>1)setZoom(rwZoomScale*dist(now)/d,(now[0].x+now[1].x)/2-rect.left,(now[0].y+now[1].y)/2-rect.top);
+ }else if(now.length===1){rwZoomViewport.scrollLeft-=now[0].x-old[0].x;rwZoomViewport.scrollTop-=now[0].y-old[0].y;}
+},{passive:false});
+for(const event of ['touchend','touchcancel'])rwZoomViewport.addEventListener(event,e=>{touchState=touchData(e);},{passive:true});
+document.addEventListener('keydown',e=>{if(rwZoomDialog.open && e.key!=='Escape'){e.stopImmediatePropagation();}},{capture:true});
+
+};
+</script>
 </head>
 <body>
 <header>
@@ -47,20 +165,10 @@ button:disabled{opacity:.35;cursor:default}
 <button id="prev">← Zurück</button>
 <span id="count">Seite 1 / 169</span>
 <button id="next">Weiter →</button>
-<button id="zoomOpen" aria-label="Aktuelle Seiten vergrössern">🔍 Lupe</button>
+
 </nav>
 
-<dialog id="zoomDialog" aria-label="Vergrösserte Katalogseiten">
-<div class="zoom-tools">
-<button id="zoomOut" aria-label="Verkleinern">−</button>
-<output id="zoomLevel" aria-live="polite">100%</output>
-<button id="zoomIn" aria-label="Vergrössern">+</button>
-<button id="zoomReset">Einpassen</button>
-<button id="zoomClose" aria-label="Zoom schliessen">✕ Schliessen</button>
-</div>
-<div id="zoomViewport"><div id="zoomCanvas"></div></div>
-<p class="zoom-hint">Ziehen zum Verschieben · Zwei Finger oder + / − zum Zoomen</p>
-</dialog>
+
 <script src="page-flip.browser.js"></script>
 <script>
 'use strict';
@@ -103,6 +211,7 @@ const flip=new St.PageFlip(book,{
   swipeDistance:25
 });
 
+window.rwAttachZoom(flip,Array.from(document.querySelectorAll('.page')).map(p=>p.querySelector('img').getAttribute('src')));
 flip.loadFromHTML(document.querySelectorAll('.page'));
 
 function update(){
@@ -119,84 +228,10 @@ flip.on('flip',update);
 flip.on('init',update);
 
 document.addEventListener('keydown',e=>{
-  if(zoomDialog.open)return;
   if(e.key==='ArrowRight')flip.flipNext();
   if(e.key==='ArrowLeft')flip.flipPrev();
 });
 
-// A separate reading view keeps zoom gestures independent of page turning.
-const zoomDialog=document.getElementById('zoomDialog');
-const zoomViewport=document.getElementById('zoomViewport');
-const zoomCanvas=document.getElementById('zoomCanvas');
-const zoomLevel=document.getElementById('zoomLevel');
-let zoomScale=1, baseWidth=0, baseHeight=0, pageCount=1;
-const pointers=new Map();
-function fitZoom(){
-  const ratio=(595/842)*pageCount;
-  baseHeight=Math.min(zoomViewport.clientHeight,zoomViewport.clientWidth/ratio);
-  baseWidth=baseHeight*ratio;
-  zoomScale=1;paintZoom();
-  zoomViewport.scrollLeft=0;zoomViewport.scrollTop=0;
-}
-function paintZoom(){
-  zoomCanvas.style.width=(baseWidth*zoomScale)+'px';
-  zoomCanvas.style.height=(baseHeight*zoomScale)+'px';
-  zoomLevel.textContent=Math.round(zoomScale*100)+'%';
-  document.getElementById('zoomOut').disabled=zoomScale<=1;
-  document.getElementById('zoomIn').disabled=zoomScale>=5;
-}
-function setZoom(value,x=zoomViewport.clientWidth/2,y=zoomViewport.clientHeight/2){
-  const old=zoomScale, oldLeft=zoomCanvas.offsetLeft, oldTop=zoomCanvas.offsetTop;
-  const cx=(zoomViewport.scrollLeft+x-oldLeft)/old;
-  const cy=(zoomViewport.scrollTop+y-oldTop)/old;
-  zoomScale=Math.max(1,Math.min(5,value));paintZoom();
-  zoomViewport.scrollLeft=zoomCanvas.offsetLeft+cx*zoomScale-x;
-  zoomViewport.scrollTop=zoomCanvas.offsetTop+cy*zoomScale-y;
-}
-function openZoom(){
-  if(zoomDialog.open)return;
-  const current=flip.getCurrentPageIndex();
-  const indices=[current];
-  if(flip.getOrientation()==='landscape' && current>0 && current+1<total)indices.push(current+1);
-  pageCount=indices.length;zoomCanvas.replaceChildren();
-  for(const i of indices){
-    const img=document.createElement('img');
-    img.src='pages/seite-'+String(i+1).padStart(2,'0')+'.jpg';
-    img.alt='Südafrika – Seite '+(i+1);img.draggable=false;zoomCanvas.appendChild(img);
-  }
-  zoomDialog.showModal();document.body.style.overflow='hidden';fitZoom();
-}
-document.getElementById('zoomOpen').addEventListener('click',openZoom);
-document.getElementById('zoomClose').addEventListener('click',()=>zoomDialog.close());
-zoomDialog.addEventListener('close',()=>{document.body.style.overflow='';pointers.clear();});
-document.getElementById('zoomIn').addEventListener('click',()=>setZoom(zoomScale*1.4));
-document.getElementById('zoomOut').addEventListener('click',()=>setZoom(zoomScale/1.4));
-document.getElementById('zoomReset').addEventListener('click',fitZoom);
-zoomViewport.addEventListener('pointerdown',e=>{
-  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});zoomViewport.setPointerCapture(e.pointerId);
-});
-zoomViewport.addEventListener('pointermove',e=>{
-  if(!pointers.has(e.pointerId))return;
-  const before=[...pointers.values()];const previous=pointers.get(e.pointerId);
-  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});const after=[...pointers.values()];
-  if(after.length===2){
-    const distance=p=>Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
-    const d=distance(before);if(d<1)return;
-    const rect=zoomViewport.getBoundingClientRect();
-    setZoom(zoomScale*distance(after)/d,(after[0].x+after[1].x)/2-rect.left,(after[0].y+after[1].y)/2-rect.top);
-  }else if(after.length===1){
-    zoomViewport.scrollLeft-=e.clientX-previous.x;zoomViewport.scrollTop-=e.clientY-previous.y;
-  }
-});
-for(const event of ['pointerup','pointercancel','lostpointercapture'])zoomViewport.addEventListener(event,e=>pointers.delete(e.pointerId));
-zoomViewport.addEventListener('wheel',e=>{
-  e.preventDefault();const rect=zoomViewport.getBoundingClientRect();
-  setZoom(zoomScale*Math.exp(-e.deltaY*.002),e.clientX-rect.left,e.clientY-rect.top);
-},{passive:false});
-zoomViewport.addEventListener('dblclick',e=>{
-  const rect=zoomViewport.getBoundingClientRect();setZoom(zoomScale>1?1:2,e.clientX-rect.left,e.clientY-rect.top);
-});
-window.addEventListener('resize',()=>{if(zoomDialog.open)fitZoom();});
 update();
 </script>
 </body>
