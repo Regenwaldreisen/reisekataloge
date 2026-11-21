@@ -163,7 +163,7 @@ document.addEventListener('keydown',e=>{if(rwZoomDialog.open && e.key!=='Escape'
 
 <nav class="controls">
 <button id="prev">← Zurück</button>
-<span id="count">Seite 1 / 169</span>
+<span id="count">Seite 1 / 168</span>
 <button id="next">Weiter →</button>
 
 </nav>
@@ -173,13 +173,15 @@ document.addEventListener('keydown',e=>{if(rwZoomDialog.open && e.key!=='Escape'
 <script>
 'use strict';
 
-const total = 169;
+const sourceTotal = 169;
+const total = 168;
 const book = document.getElementById('book');
 const counter = document.getElementById('count');
 const prev = document.getElementById('prev');
 const next = document.getElementById('next');
 
-for(let i=1;i<=total;i++){
+for(let i=1;i<=sourceTotal;i++){
+  if(i===4)continue; // Doppelte Originalseite auslassen.
   const page=document.createElement('div');
   page.className='page';
 
